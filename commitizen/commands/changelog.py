@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 from operator import itemgetter
 from typing import Callable, Dict, List, Optional
 
-from commitizen import bump, changelog, factory, git, out
+from commitizen import changelog, factory, git, out
 from commitizen.config import BaseConfig
 from commitizen.exceptions import (
     DryRunExit,
@@ -138,7 +138,6 @@ class Changelog:
                 tags,
                 version=self.rev_range,
                 tag_format=self.tag_format,
-                create_tag=bump.create_tag,
             )
 
         commits = git.get_commits(

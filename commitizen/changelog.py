@@ -34,6 +34,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple
 from jinja2 import Environment, PackageLoader
 
 from commitizen import defaults
+from commitizen.bump import normalize_tag
 from commitizen.exceptions import InvalidConfigurationError
 from commitizen.git import GitCommit, GitTag
 
@@ -310,7 +311,7 @@ def get_smart_tag_range(
 
 
 def get_start_and_end_rev(
-    tags: List[GitTag], version: str, tag_format: str, create_tag: Callable
+    tags: List[GitTag], version: str, tag_format: str
 ) -> Tuple[Optional[str], Optional[str]]:
     """Find the tags for the given version.
 
@@ -325,14 +326,14 @@ def get_start_and_end_rev(
     except ValueError:
         end = version
 
-    end_tag = create_tag(end, tag_format=tag_format)
+    end_tag = normalize_tag(end, tag_format=tag_format)
 
     start_tag = None
     if start:
-        start_tag = create_tag(start, tag_format=tag_format)
+        start_tag = normalize_tag(start, tag_format=tag_format)
 
     tags_range = get_smart_tag_range(tags, start=end_tag, end=start_tag)
-    if len(tags_range) == 0:
+    if not tags_range:
         return None, None
 
     start_rev: Optional[str] = tags_range[-1].name
