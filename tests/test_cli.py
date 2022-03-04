@@ -95,3 +95,16 @@ def test_argcomplete_activation():
     output = subprocess.run(["register-python-argcomplete", "cz"])
 
     assert output.returncode == 0
+
+
+def test_commitizen_excepthook_no_raises(capsys):
+    with pytest.raises(SystemExit) as excinfo:
+        cli.commitizen_excepthook(
+            NotAGitProjectError,
+            NotAGitProjectError(),
+            "",
+            no_raise=[NotAGitProjectError.exit_code],
+        )
+
+    assert excinfo.type == SystemExit
+    assert excinfo.value.code == 0

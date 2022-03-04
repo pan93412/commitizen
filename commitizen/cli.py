@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from functools import partial
+from typing import List
 
 import argcomplete
 from decli import cli
@@ -23,6 +24,13 @@ data = {
         {
             "name": ["-n", "--name"],
             "help": "use the given commitizen (default: cz_conventional_commits)",
+        },
+        {
+            "name": ["-nr", "--no-raise"],
+            "action": "append",
+            "type": int,
+            "required": False,
+            "help": "error codes that won't rise error, provide -nr multiple times for many",
         },
     ],
     "subcommands": {
@@ -268,13 +276,20 @@ data = {
 original_excepthook = sys.excepthook
 
 
-def commitizen_excepthook(type, value, tracekback, debug=False):
+def commitizen_excepthook(
+    type, value, tracekback, debug=False, no_raise: List[int] = None
+):
+    if no_raise is None:
+        no_raise = []
     if isinstance(value, CommitizenException):
         if value.message:
             value.output_method(value.message)
         if debug:
             original_excepthook(type, value, tracekback)
-        sys.exit(value.exit_code)
+        exit_code = value.exit_code
+        if exit_code in no_raise:
+            exit_code = 0
+        sys.exit(exit_code)
     else:
         original_excepthook(type, value, tracekback)
 
@@ -313,6 +328,11 @@ def main():
     if args.debug:
         logging.getLogger("commitizen").setLevel(logging.DEBUG)
         sys.excepthook = commitizen_debug_excepthook
+    elif args.no_raise:
+        no_raise_debug_excepthook = partial(
+            commitizen_excepthook, no_raise=args.no_raise
+        )
+        sys.excepthook = no_raise_debug_excepthook
 
     args.func(conf, vars(args))()
 
